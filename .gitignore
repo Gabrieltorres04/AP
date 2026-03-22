@@ -209,3 +209,6 @@ marimo/_lsp/
 __marimo__/
 data/dataset_OTB.csv
 data/raw/OTB_raw.csv
+data/dataset_claude.csv
+data/raw/claude_raw.csv
+data/raw/claude_raw.parquet
