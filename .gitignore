@@ -212,3 +212,8 @@ data/raw/OTB_raw.csv
 data/dataset_claude.csv
 data/raw/claude_raw.csv
 data/raw/claude_raw.parquet
+data/dataset_final.csv
+data/dataset_HC3_human.csv
+data/dataset_RAID.csv
+data/raw/HC3_raw.parquet
+data/raw/RAID_filtered.csv
