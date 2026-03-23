@@ -1,6 +1,8 @@
+import re
 import numpy as np
 import pandas as pd
 import torch
+from collections import Counter
 from sklearn.model_selection import train_test_split
 from torch.utils.data import TensorDataset, DataLoader
 from src.text_processing import CustomTFIDF
@@ -25,6 +27,29 @@ def create_tfidf_features(text_train, text_val, max_features=1000):
     X_train = tfidf.transform(text_train).astype(np.float32)
     X_val = tfidf.transform(text_val).astype(np.float32)
     return tfidf, X_train, X_val
+
+def tokenize(text):
+    return re.sub(r"[^a-z0-9\s]", " ", str(text).lower()).split()
+
+def build_vocab(texts, max_vocab=20000, min_freq=3):
+    counter = Counter()
+    for text in texts:
+        counter.update(tokenize(text))
+    vocab = {"<pad>": 0, "<unk>": 1}
+    for token, freq in counter.most_common():
+        if len(vocab) >= max_vocab:
+            break
+        if freq >= min_freq:
+            vocab[token] = len(vocab)
+    return vocab
+
+def encode_texts(texts, vocab, max_len=120):
+    out = []
+    for text in texts:
+        ids = [vocab.get(t, 1) for t in tokenize(text)[:max_len]]
+        ids += [0] * (max_len - len(ids))
+        out.append(ids)
+    return np.array(out, dtype=np.int64)
 
 def make_dataloaders_from_arrays(X_train, y_train, X_val, y_val, batch_size=64):
     train_ds = TensorDataset(torch.tensor(X_train), torch.tensor(y_train))

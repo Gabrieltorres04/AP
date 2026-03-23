@@ -1,6 +1,7 @@
 import random
 import numpy as np
 import torch
+
 from sklearn.metrics import accuracy_score, f1_score, confusion_matrix, classification_report
 
 SEED = 2026
@@ -195,45 +196,65 @@ def run_training(
     patience=None,
     min_delta=0.0,
     verbose=False,
+    mlflow_params=None,
 ):
-    history = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
-    best_state, best_val = None, -1.0
-    best_epoch = -1
-    no_improve_count = 0
+    def _run():
+        history = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
+        best_state, best_val = None, -1.0
+        best_epoch = -1
+        no_improve_count = 0
 
-    for epoch in range(epochs):
-        tr_loss, tr_acc = train_one_epoch(model, train_loader, criterion, optimizer, device)
-        va_loss, va_acc, _, _ = evaluate(model, val_loader, criterion, device)
+        for epoch in range(epochs):
+            tr_loss, tr_acc = train_one_epoch(model, train_loader, criterion, optimizer, device)
+            va_loss, va_acc, _, _ = evaluate(model, val_loader, criterion, device)
 
-        history["train_loss"].append(tr_loss)
-        history["train_acc"].append(tr_acc)
-        history["val_loss"].append(va_loss)
-        history["val_acc"].append(va_acc)
+            history["train_loss"].append(tr_loss)
+            history["train_acc"].append(tr_acc)
+            history["val_loss"].append(va_loss)
+            history["val_acc"].append(va_acc)
 
-        if verbose:
-            print(
-                f"Epoch {epoch + 1:02d}/{epochs} | "
-                f"train_loss={tr_loss:.4f} train_acc={tr_acc:.4f} | "
-                f"val_loss={va_loss:.4f} val_acc={va_acc:.4f}"
-            )
+            if mlflow_params is not None:
+                import mlflow
+                mlflow.log_metrics(
+                    {"train_loss": tr_loss, "train_acc": tr_acc, "val_loss": va_loss, "val_acc": va_acc},
+                    step=epoch,
+                )
 
-        if va_acc > (best_val + min_delta):
-            best_val = va_acc
-            best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
-            best_epoch = epoch + 1
-            no_improve_count = 0
-        else:
-            no_improve_count += 1
-
-        if patience is not None and no_improve_count >= patience:
             if verbose:
                 print(
-                    f"Early stopping at epoch {epoch + 1} "
-                    f"(best epoch={best_epoch}, best val_acc={best_val:.4f})"
+                    f"Epoch {epoch + 1:02d}/{epochs} | "
+                    f"train_loss={tr_loss:.4f} train_acc={tr_acc:.4f} | "
+                    f"val_loss={va_loss:.4f} val_acc={va_acc:.4f}"
                 )
-            break
 
-    return history, best_state, best_epoch
+            if va_acc > (best_val + min_delta):
+                best_val = va_acc
+                best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
+                best_epoch = epoch + 1
+                no_improve_count = 0
+            else:
+                no_improve_count += 1
+
+            if patience is not None and no_improve_count >= patience:
+                if verbose:
+                    print(
+                        f"Early stopping at epoch {epoch + 1} "
+                        f"(best epoch={best_epoch}, best val_acc={best_val:.4f})"
+                    )
+                break
+
+        if mlflow_params is not None:
+            import mlflow
+            mlflow.log_metrics({"best_val_acc": best_val, "best_epoch": best_epoch})
+
+        return history, best_state, best_epoch
+
+    if mlflow_params is not None:
+        import mlflow
+        with mlflow.start_run():
+            mlflow.log_params(mlflow_params)
+            return _run()
+    return _run()
 
 
 def run_training_hierarchical(
@@ -252,66 +273,74 @@ def run_training_hierarchical(
     patience=None,
     min_delta=0.0,
     verbose=False,
+    mlflow_params=None,
 ):
-    history = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
-    best_state, best_val = None, -1.0
-    best_epoch = -1
-    no_improve_count = 0
+    def _run():
+        history = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
+        best_state, best_val = None, -1.0
+        best_epoch = -1
+        no_improve_count = 0
 
-    for epoch in range(epochs):
-        tr_loss, tr_acc = train_one_epoch_hierarchical(
-            model,
-            train_loader,
-            criterion_binary,
-            criterion_provider,
-            optimizer,
-            device,
-            human_class_idx=human_class_idx,
-            ai_class_indices=ai_class_indices,
-            alpha=alpha,
-            beta=beta,
-        )
-        va_loss, va_acc, _, _ = evaluate_hierarchical(
-            model,
-            val_loader,
-            criterion_binary,
-            criterion_provider,
-            device,
-            human_class_idx=human_class_idx,
-            ai_class_indices=ai_class_indices,
-            alpha=alpha,
-            beta=beta,
-        )
-
-        history["train_loss"].append(tr_loss)
-        history["train_acc"].append(tr_acc)
-        history["val_loss"].append(va_loss)
-        history["val_acc"].append(va_acc)
-
-        if verbose:
-            print(
-                f"Epoch {epoch + 1:02d}/{epochs} | "
-                f"train_loss={tr_loss:.4f} train_acc={tr_acc:.4f} | "
-                f"val_loss={va_loss:.4f} val_acc={va_acc:.4f}"
+        for epoch in range(epochs):
+            tr_loss, tr_acc = train_one_epoch_hierarchical(
+                model, train_loader, criterion_binary, criterion_provider,
+                optimizer, device,
+                human_class_idx=human_class_idx, ai_class_indices=ai_class_indices,
+                alpha=alpha, beta=beta,
+            )
+            va_loss, va_acc, _, _ = evaluate_hierarchical(
+                model, val_loader, criterion_binary, criterion_provider, device,
+                human_class_idx=human_class_idx, ai_class_indices=ai_class_indices,
+                alpha=alpha, beta=beta,
             )
 
-        if va_acc > (best_val + min_delta):
-            best_val = va_acc
-            best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
-            best_epoch = epoch + 1
-            no_improve_count = 0
-        else:
-            no_improve_count += 1
+            history["train_loss"].append(tr_loss)
+            history["train_acc"].append(tr_acc)
+            history["val_loss"].append(va_loss)
+            history["val_acc"].append(va_acc)
 
-        if patience is not None and no_improve_count >= patience:
+            if mlflow_params is not None:
+                import mlflow
+                mlflow.log_metrics(
+                    {"train_loss": tr_loss, "train_acc": tr_acc, "val_loss": va_loss, "val_acc": va_acc},
+                    step=epoch,
+                )
+
             if verbose:
                 print(
-                    f"Early stopping at epoch {epoch + 1} "
-                    f"(best epoch={best_epoch}, best val_acc={best_val:.4f})"
+                    f"Epoch {epoch + 1:02d}/{epochs} | "
+                    f"train_loss={tr_loss:.4f} train_acc={tr_acc:.4f} | "
+                    f"val_loss={va_loss:.4f} val_acc={va_acc:.4f}"
                 )
-            break
 
-    return history, best_state, best_epoch
+            if va_acc > (best_val + min_delta):
+                best_val = va_acc
+                best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
+                best_epoch = epoch + 1
+                no_improve_count = 0
+            else:
+                no_improve_count += 1
+
+            if patience is not None and no_improve_count >= patience:
+                if verbose:
+                    print(
+                        f"Early stopping at epoch {epoch + 1} "
+                        f"(best epoch={best_epoch}, best val_acc={best_val:.4f})"
+                    )
+                break
+
+        if mlflow_params is not None:
+            import mlflow
+            mlflow.log_metrics({"best_val_acc": best_val, "best_epoch": best_epoch})
+
+        return history, best_state, best_epoch
+
+    if mlflow_params is not None:
+        import mlflow
+        with mlflow.start_run():
+            mlflow.log_params({**mlflow_params, "alpha": alpha, "beta": beta})
+            return _run()
+    return _run()
 
 def save_artifact(path, payload):
     torch.save(payload, path)

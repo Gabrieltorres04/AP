@@ -207,6 +207,10 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# MLflow
+mlruns/
+mlartifacts/
 data/dataset_OTB.csv
 data/raw/OTB_raw.csv
 data/dataset_claude.csv
