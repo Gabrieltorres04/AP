@@ -1,0 +1,10 @@
+numpy
+pandas
+matplotlib
+seaborn
+torch
+datasets
+huggingface-hub
+scikit-learn
+mlflow
+xgboost
