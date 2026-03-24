@@ -49,11 +49,9 @@ print(f"\nTotal before sampling: {len(df_all):,}")
 print(df_all["label"].value_counts())
 
 # Sample at max SAMPLES_PER_CLASS per label
-sampled = (
-    df_all
-    .groupby("label", group_keys=False)
-    .apply(lambda g: g.sample(min(len(g), SAMPLES_PER_CLASS), random_state=RANDOM_SEED))
-)
+sampled = df_all.groupby("label").sample(n=SAMPLES_PER_CLASS, random_state=RANDOM_SEED)
+
+    # suffle
 sampled = sampled.sample(frac=1, random_state=RANDOM_SEED).reset_index(drop=True)
 
 print(f"\nFinal dataset: {len(sampled):,} rows")
