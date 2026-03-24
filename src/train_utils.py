@@ -1,8 +1,15 @@
 import random
+import os
+from pathlib import Path
 import numpy as np
 import torch
 
 from sklearn.metrics import accuracy_score, f1_score, confusion_matrix, classification_report
+
+def _set_mlflow_uri():
+    import mlflow
+    mlruns_path = Path(__file__).resolve().parent.parent / "mlruns"
+    mlflow.set_tracking_uri(mlruns_path.as_uri())
 
 SEED = 2026
 
@@ -251,6 +258,7 @@ def run_training(
 
     if mlflow_params is not None:
         import mlflow
+        _set_mlflow_uri()
         with mlflow.start_run():
             mlflow.log_params(mlflow_params)
             return _run()
@@ -337,6 +345,7 @@ def run_training_hierarchical(
 
     if mlflow_params is not None:
         import mlflow
+        _set_mlflow_uri()
         with mlflow.start_run():
             mlflow.log_params({**mlflow_params, "alpha": alpha, "beta": beta})
             return _run()
