@@ -51,6 +51,43 @@ def encode_texts(texts, vocab, max_len=120):
         out.append(ids)
     return np.array(out, dtype=np.int64)
 
+def load_pretrained_embeddings(vocab, source='glove', embed_dim=100):
+    """
+    Descarrega embeddings pré-treinados e constrói uma matriz alinhada com o vocab.
+
+    source:
+        'glove'    — GloVe Wikipedia+Gigaword; embed_dim: 50, 100, 200, 300
+        'fasttext' — FastText Wikipedia News subwords; embed_dim: 300 (único disponível)
+
+    Palavras não encontradas são inicializadas com N(0, 0.6).
+    <pad> (índice 0) é sempre zeros.
+    """
+    import gensim.downloader as api
+
+    if source == 'glove':
+        model_name = f"glove-wiki-gigaword-{embed_dim}"
+    elif source == 'fasttext':
+        model_name = "fasttext-wiki-news-subwords-300"
+        embed_dim = 300  # fasttext só existe em 300d
+    else:
+        raise ValueError(f"source deve ser 'glove' ou 'fasttext', não '{source}'")
+
+    print(f"A carregar {model_name}...")
+    vectors = api.load(model_name)
+
+    vocab_size = len(vocab)
+    embedding_matrix = np.random.normal(scale=0.6, size=(vocab_size, embed_dim)).astype(np.float32)
+    embedding_matrix[0] = 0  # <pad> = zeros
+
+    found = 0
+    for word, i in vocab.items():
+        if word in vectors:
+            embedding_matrix[i] = vectors[word]
+            found += 1
+
+    print(f"{source} {embed_dim}d: {found}/{vocab_size} palavras encontradas ({100*found/vocab_size:.1f}%)")
+    return torch.tensor(embedding_matrix), embed_dim
+
 def make_dataloaders_from_arrays(X_train, y_train, X_val, y_val, batch_size=64):
     train_ds = TensorDataset(torch.tensor(X_train), torch.tensor(y_train))
     val_ds = TensorDataset(torch.tensor(X_val), torch.tensor(y_val))
