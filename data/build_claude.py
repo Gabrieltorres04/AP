@@ -110,6 +110,6 @@ print(f"\nChunked dataset size: {len(df_chunked)}")
 word_counts = df_chunked["Text"].apply(lambda x: len(x.split()))
 print(f"Word count stats:\n{word_counts.describe()}")
 
-out_path = os.path.join(script_dir, "dataset_claude.csv")
+out_path = os.path.join(script_dir, "clean_datasets", "dataset_claude.csv")
 df_chunked.to_csv(out_path, index=False)
 print(f"\nSaved to {out_path}")

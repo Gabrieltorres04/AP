@@ -73,6 +73,6 @@ print(df_chunked["Label"].value_counts())
 word_counts = df_chunked["Text"].apply(lambda x: len(x.split()))
 print(f"\nWord count stats after chunking:\n{word_counts.describe()}")
 
-out_path = os.path.join(script_dir, "dataset_RAID.csv")
+out_path = os.path.join(script_dir, "clean_datasets", "dataset_RAID.csv")
 df_chunked.to_csv(out_path, index=False)
 print(f"\nSaved to {out_path}")

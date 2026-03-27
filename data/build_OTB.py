@@ -85,6 +85,6 @@ print(f"\nChunked dataset size: {len(df_chunked)}")
 print(df_chunked["Label"].value_counts())
 
 
-out_path = os.path.join(script_dir, "dataset_OTB.csv")
+out_path = os.path.join(script_dir, "clean_datasets", "dataset_OTB.csv")
 df_chunked.to_csv(out_path, index=False)
 print(f"\nSaved to {out_path}")
