@@ -227,3 +227,4 @@ data/clean_datasets/dataset_HC3_human.csv
 data/clean_datasets/dataset_RAID.csv
 .gitignore
 data/clean_datasets/dataset_OTB.csv
+modelos/distilbert_dom_03/model.safetensors
