@@ -54,3 +54,9 @@ Abaixo apresenta-se a organização de diretórios e ficheiros do projeto:
     ├── subm3-g1-MEI-B.ipynb  
     └── subm3-g1-MEI-B.csv  
 ```
+
+## Atenção: Download dos Modelos
+
+Devido às restrições de tamanho de ficheiros do GitHub (limite de 100MB), os pesos do modelo DistilBERT (`model.safetensors`) e outros modelos pesados encontram-se alojados externamente. Pode fazer o download do ficheiro através do link abaixo e coloque-os na pasta `modelos/distilbert/`:
+
+- **[Link](https://uminho365-my.sharepoint.com/:u:/g/personal/pg60269_uminho_pt/IQBboMgC2edhQob0bRhdRgivAblqoc4YGvHjAYoTY2Oj4zM?e=6G844J)**
