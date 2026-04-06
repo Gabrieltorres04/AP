@@ -55,18 +55,3 @@ class CustomTFIDF:
                     
         return X
     
-
-def encode_labels(labels):
-
-    unique_labels = sorted(list(set(labels)))
-    label_to_idx = {label: i for i, label in enumerate(unique_labels)}
-    idx_to_label = {i: label for i, label in enumerate(unique_labels)}
-    
-    Y = np.zeros((len(labels), len(unique_labels)))
-    
-    for i, label in enumerate(labels):
-        col_idx = label_to_idx[label]
-        Y[i, col_idx] = 1
-        
-    print(f"Classes detetadas: {unique_labels}")
-    return Y, label_to_idx, idx_to_label
